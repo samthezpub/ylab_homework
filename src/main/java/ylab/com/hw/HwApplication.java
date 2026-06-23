@@ -2,6 +2,8 @@ package ylab.com.hw;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,17 +18,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @SpringBootApplication
 @RequiredArgsConstructor
-public class HwApplication implements CommandLineRunner {
-
-  private final AppConfig config;
+public class HwApplication implements ApplicationRunner {
   private final TextAnalyzer textAnalyzer;
   private final ConsoleFormatter consoleFormatter;
   private final JsonFormatter jsonFormatter;
-  private final HelpPrinter helpPrinter;
 
   public static void main(String[] args) {
     boolean helpRequested = Arrays.asList(args).contains("--help");
@@ -44,8 +44,13 @@ public class HwApplication implements CommandLineRunner {
   }
 
   @Override
-  public void run(String... args) throws Exception {
-    if (!validateParams()) {
+  public void run(ApplicationArguments args) throws Exception {
+    AppConfig config;
+    try {
+      config = parseArgs(args);
+    } catch (IllegalArgumentException e) {
+      System.err.println("Ошибка: " + e.getMessage());
+      System.err.println("Запустите с --help для справки");
       return;
     }
 
@@ -73,34 +78,44 @@ public class HwApplication implements CommandLineRunner {
     }
   }
 
-  private boolean validateParams() {
-    if (config.getDir() == null || config.getDir().isBlank()) {
-      System.err.println("Ошибка: --dir обязателен");
-      printUsage();
-      return false;
-    }
-    if (config.getMinLength() == null) {
-      System.err.println("Ошибка: --min-length обязателен");
-      printUsage();
-      return false;
-    }
+  private AppConfig parseArgs(ApplicationArguments args) {
+    AppConfig config = new AppConfig();
+
+    config.setDir(required(args, "dir"));
+    config.setMinLength(requiredInt(args, "min-length"));
+    config.setTop(requiredInt(args, "top"));
+    config.setOutput(optional(args, "output"));
+    config.setStopwords(optional(args, "stopwords"));
+
     if (config.getMinLength() < 1) {
-      System.err.println("Ошибка: --min-length должен быть >= 1");
-      return false;
-    }
-    if (config.getTop() == null) {
-      System.err.println("Ошибка: --top обязателен");
-      printUsage();
-      return false;
+      throw new IllegalArgumentException("--min-length должен быть >= 1");
     }
     if (config.getTop() < 1) {
-      System.err.println("Ошибка: --top должен быть >= 1");
-      return false;
+      throw new IllegalArgumentException("--top должен быть >= 1");
     }
-    return true;
+
+    return config;
   }
 
-  private void printUsage() {
-    System.err.println("Запустите с --help для справки");
+  private String required(ApplicationArguments args, String name) {
+    String value = optional(args, name);
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException("--" + name + " обязателен");
+    }
+    return value;
+  }
+
+  private String optional(ApplicationArguments args, String name) {
+    List<String> values = args.getOptionValues(name);
+    return values == null || values.isEmpty() ? null : values.get(0);
+  }
+
+  private int requiredInt(ApplicationArguments args, String name) {
+    String value = required(args, name);
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("--" + name + " должен быть целым числом");
+    }
   }
 }
