@@ -10,15 +10,10 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "")
 public class AppConfig {
-  @NotBlank(message = "--dir не указан")
   private String dir;
-
-  @NotNull(message = "--min-length не указан")
   private Integer minLength;
-
-  @NotNull(message = "--top не указан")
   private Integer top;
-
-  private String output; // Опциональный параметр
-  private String stopwords; // Опциональный параметр
+  private String output;
+  private String stopwords;
+  private boolean help;
 }
