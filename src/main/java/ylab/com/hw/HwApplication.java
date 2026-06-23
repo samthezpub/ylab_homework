@@ -15,6 +15,7 @@ import ylab.com.hw.service.TextAnalyzer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 @Slf4j
 @SpringBootApplication
@@ -28,16 +29,22 @@ public class HwApplication implements CommandLineRunner {
   private final HelpPrinter helpPrinter;
 
   public static void main(String[] args) {
-    SpringApplication.run(HwApplication.class, args);
+    boolean helpRequested = Arrays.asList(args).contains("--help");
+    if (helpRequested) {
+      // печатаем help без поднятия Spring-контекста вообще
+      new HelpPrinter().print();
+      return;
+    }
+
+    String[] filteredArgs = Arrays.stream(args)
+        .filter(arg -> !arg.equals("--help"))
+        .toArray(String[]::new);
+
+    SpringApplication.run(HwApplication.class, filteredArgs);
   }
 
   @Override
   public void run(String... args) throws Exception {
-    if (config.isHelp()) {
-      helpPrinter.print();
-      return;
-    }
-
     if (!validateParams()) {
       return;
     }

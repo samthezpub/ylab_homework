@@ -6,8 +6,6 @@ import org.springframework.stereotype.Component;
 public class HelpPrinter {
   public void print() {
     System.out.println("""
-        Text Analyzer — анализ частоты слов в текстовых файлах
-        
         Использование:
           java -jar text-analyzer.jar --dir=<path> --min-length=<n> --top=<n> [опции]
         
@@ -23,8 +21,8 @@ public class HelpPrinter {
         
         Примеры:
           java -jar text-analyzer.jar --dir=./texts --min-length=5 --top=10
-          java -jar text-analyzer.jar --dir=./texts --min-length=4 --top=20 --output=result.json
-          java -jar text-analyzer.jar --dir=./texts --min-length=3 --top=5 --stopwords=stop.txt
+          java -jar text-analyzer.jar --dir=./texts --min-length=4 --top=20 --output=./result.json
+          java -jar text-analyzer.jar --dir=./texts --min-length=3 --top=5 --stopwords=./stop.txt
         """);
   }
 }
